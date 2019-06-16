@@ -1,0 +1,138 @@
+package mavlink1
+
+// #include "checksum.h"
+import "C"
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"linskruis/go-mavlink1/util"
+)
+
+type GetMsgFun func(msg *Mavlink1Msg)
+
+type Mavlink1 struct {
+	sysid  byte
+	compid byte
+
+	isRun bool
+
+	getFun  GetMsgFun
+	recvBuf *util.CircleByteBuffer
+}
+type Mavlink1Msg struct {
+	Length int
+	Seq    byte
+	Sysid  byte
+	Compid byte
+	Msgid  byte
+
+	Payload bytes.Buffer
+}
+
+func New() *Mavlink1 {
+	e := new(Mavlink1)
+	e.recvBuf = util.NewCircleByteBuffer(1024 * 5)
+	return e
+}
+
+func (e *Mavlink1) Start(getfun GetMsgFun) error {
+	if getfun == nil {
+		return errors.New("getfun is nil")
+	}
+	e.isRun = true
+	e.getFun = getfun
+	go func() {
+		for e.isRun {
+			e.run()
+		}
+	}()
+	return nil
+}
+
+func (e *Mavlink1) Stop() {
+	e.isRun = false
+}
+
+func (e *Mavlink1) run() {
+	defer util.Recovers("run")
+
+	lens := e.recvBuf.GetLen()
+	for i := 0; i < lens; i++ {
+		if e.recvBuf.Geti(0) != 0xfe {
+			e.recvBuf.GetByte()
+		} else {
+			break
+		}
+	}
+
+	if e.recvBuf.GetLen() < 6 {
+		return
+	}
+	ln := int(e.recvBuf.Geti(1) & 0xff)
+	seq := e.recvBuf.Geti(2)
+	sysid := e.recvBuf.Geti(3)
+	compid := e.recvBuf.Geti(4)
+	msgid := e.recvBuf.Geti(5)
+	if e.recvBuf.GetLen() < ln+8 {
+		return
+	}
+
+	//------head
+	bthd := make([]byte, 6)
+	e.recvBuf.Read(bthd)
+	//------head end
+
+	//------body
+	btbd := make([]byte, ln)
+	e.recvBuf.Read(btbd)
+	//------body end
+
+	crc1, _ := e.recvBuf.GetByte()
+	crc2, _ := e.recvBuf.GetByte()
+	c1, c2 := GetChecksumCRC(&bthd, &btbd)
+
+	sumth := (int(int(crc1)<<8) & 0xffff) | (int(crc2) & 0xff)
+	summe := (int(int(c1)<<8) & 0xffff) | (int(c2) & 0xff)
+	if sumth != summe {
+		fmt.Printf("checksum error,th:%d,me:%d!\n", sumth, summe)
+		return
+	}
+
+	msg := new(Mavlink1Msg)
+	msg.Length = ln
+	msg.Seq = seq
+	msg.Sysid = sysid
+	msg.Compid = compid
+	msg.Msgid = msgid
+	msg.Payload.Write(btbd)
+	e.getFun(msg)
+}
+
+func (e *Mavlink1) Puts(bts []byte) (int, error) {
+	return e.recvBuf.Write(bts)
+}
+
+func (e *Mavlink1) GetMsgBytes(msg *Mavlink1Msg) *bytes.Buffer {
+	buf := new(bytes.Buffer)
+	buf.WriteByte(0xfe)
+	lns := util.Short2Bytes(msg.Length)
+	bthd := []byte{lns[0], lns[1], msg.Seq, msg.Sysid, msg.Compid, msg.Msgid}
+	btbd := msg.Payload.Bytes()
+	c1, c2 := GetChecksumCRC(&bthd, &btbd)
+	buf.Write(bthd)
+	buf.Write(btbd)
+	buf.Write([]byte{c1, c2})
+	return buf
+}
+
+func GetChecksumCRC(bthd, btbd *[]byte) (byte, byte) {
+	bthds := *bthd
+	btbds := *btbd
+	checksum := C.crc_calculate(C.CBytes(bthds[1:]), 5)
+	C.crc_accumulate_buffer(&checksum, C.CBytes(btbds), C.int(len(btbds)))
+	C.crc_accumulate(C.uchar(MSG_CRC[bthds[5]]&0xff), &checksum)
+	c1 := byte(checksum & 0xff)
+	c2 := byte((checksum >> 8) & 0xff)
+	return c1, c2
+}
