@@ -1,23 +1,5 @@
 package mavlink1
 
-const (
-	MSG_ID_HEARTBEAT            = 0
-	MSG_ID_STATUS               = 1
-	SYSTEM_TIME                 = 2
-	PING                        = 4
-	CHANGE_OPERATOR_CONTROL     = 5
-	CHANGE_OPERATOR_CONTROL_ACK = 6
-	AUTH_KEY                    = 7
-	LINK_NODE_STATUS            = 8
-	SET_MODE                    = 11
-	PARAM_REQUEST_READ          = 20
-	PARAM_REQUEST_LIST          = 21
-	PARAM_VALUE                 = 22
-	PARAM_SET                   = 23
-
-	//no all
-)
-
 var MSG_CRC = []int{
 	50, 124, 137, 0, 237, 217, 104, 119, 117, 0, 0, 89, 0, 0, 0, 0, 0, 0, 0, 0, 214, 159, 220, 168, 24, 23, 170, 144, 67, 115, 39, 246, 185,
 	104, 237, 244, 222, 212, 9, 254, 230, 28, 28, 132, 221, 232, 11, 153, 41, 39, 78, 196, 132, 0, 15, 3, 0, 0, 0, 0, 0, 167, 183, 119, 191,

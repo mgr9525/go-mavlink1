@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/mgr9525/go-mavlink1"
+	"github.com/mgr9525/go-mavlink1/msg"
 )
 
+var mavchan = mavlink1.New()
+
 func main() {
-	var mavchan = mavlink1.New()
 	if mavchan.Start(getMsg) == nil {
 		println("mav start!")
 		testBytes := []byte{
@@ -33,13 +35,11 @@ func main() {
 func getMsg(msg *mavlink1.Mavlink1Msg) {
 	fmt.Printf("getMsg from:%x-%x, msgid:%x\n", msg.Sysid, msg.Compid, msg.Msgid)
 
-	replyMsg := new(mavlink1.Mavlink1Msg)
-	replyMsg.Length = 2
-	replyMsg.Seq = 1
-	replyMsg.Sysid = 2
-	replyMsg.Compid = 1
-	replyMsg.Msgid = mavlink1.SET_MODE //test
-	replyMsg.Payload.Write([]byte{0x11, 0x22})
+	sct := new(messages.SetMode)
+	sct.TargetSystem = 1
+	sct.CustomMode = 1
+	sct.BaseMode = 1
+	replyMsg := mavchan.NewMsg(1, 2, messages.MSG_ID_SET_MODE, messages.SetMode2Byte(sct))
 	replyBytes := mavlink1.GetMsgBytes(replyMsg).Bytes()
 	fmt.Print("replyBytes:")
 	for _, v := range replyBytes {

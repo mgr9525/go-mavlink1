@@ -49,7 +49,7 @@ func getMsg(msg *mavlink1.Mavlink1Msg) {
 	replyMsg.Sysid = 2
 	replyMsg.Compid = 1
 	replyMsg.Msgid = mavlink1.SET_MODE //test
-	replyMsg.Payload.Write([]byte{0x11, 0x22})
+	replyMsg.Payload=&[]byte{0x11, 0x22}
 	replyBytes := mavlink1.GetMsgBytes(replyMsg).Bytes()
 	fmt.Print("replyBytes:")
 	for _, v := range replyBytes {

@@ -29,7 +29,7 @@ type Mavlink1Msg struct {
 	Compid byte
 	Msgid  byte
 
-	Payload bytes.Buffer
+	Payload *[]byte
 }
 
 func New() *Mavlink1 {
@@ -113,7 +113,7 @@ func (e *Mavlink1) run() {
 	msg.Sysid = sysid
 	msg.Compid = compid
 	msg.Msgid = msgid
-	msg.Payload.Write(btbd)
+	msg.Payload = &btbd
 	go e.getFun(msg)
 }
 
@@ -129,15 +129,15 @@ func (e *Mavlink1) NextSeq() byte {
 	}
 	return ret
 }
-func (e *Mavlink1) NewMsg(sysid, compid, msgid int, data []byte) *Mavlink1Msg {
+func (e *Mavlink1) NewMsg(sysid, compid, msgid int, data *[]byte) *Mavlink1Msg {
 	msg := new(Mavlink1Msg)
 	msg.Seq = e.NextSeq()
 	msg.Sysid = byte(sysid)
 	msg.Compid = byte(compid)
 	msg.Msgid = byte(msgid)
-	msg.Length = byte(len(data))
+	msg.Length = byte(len(*data))
 	if data != nil {
-		msg.Payload.Write(data)
+		msg.Payload = data
 	}
 	return msg
 }
@@ -145,7 +145,7 @@ func (e *Mavlink1) NewMsg(sysid, compid, msgid int, data []byte) *Mavlink1Msg {
 func GetMsgBytes(msg *Mavlink1Msg) *bytes.Buffer {
 	buf := new(bytes.Buffer)
 	bthd := []byte{0xfe, msg.Length, msg.Seq, msg.Sysid, msg.Compid, msg.Msgid}
-	btbd := msg.Payload.Bytes()
+	btbd := *msg.Payload
 	c1, c2 := GetChecksumCRC(&bthd, &btbd)
 	buf.Write(bthd)
 	buf.Write(btbd)
