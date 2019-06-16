@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"linskruis/go-mavlink1/util"
+	"github.com/mgr9525/go-mavlink1/util"
 )
 
 type GetMsgFun func(msg *Mavlink1Msg)

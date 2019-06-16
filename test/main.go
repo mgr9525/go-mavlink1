@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"linskruis/go-mavlink1"
+	"github.com/mgr9525/go-mavlink1"
 )
 
 var mavchan = mavlink1.New()
