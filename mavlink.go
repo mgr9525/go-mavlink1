@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mgr9525/go-mavlink1/util"
+	"time"
 )
 
 type GetMsgFun func(msg *Mavlink1Msg)
@@ -45,6 +46,7 @@ func (e *Mavlink1) Start(getfun GetMsgFun) error {
 	go func() {
 		for e.isRun && e.getFun != nil {
 			e.run()
+			time.Sleep(time.Millisecond)
 		}
 	}()
 	return nil
