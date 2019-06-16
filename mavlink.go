@@ -117,7 +117,7 @@ func (e *Mavlink1) Puts(bts []byte) (int, error) {
 	return e.recvBuf.Write(bts)
 }
 
-func (e *Mavlink1) GetMsgBytes(msg *Mavlink1Msg) *bytes.Buffer {
+func GetMsgBytes(msg *Mavlink1Msg) *bytes.Buffer {
 	buf := new(bytes.Buffer)
 	bthd := []byte{0xfe, msg.Length, msg.Seq, msg.Sysid, msg.Compid, msg.Msgid}
 	btbd := msg.Payload.Bytes()

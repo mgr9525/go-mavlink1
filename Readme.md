@@ -15,9 +15,8 @@ import (
 	"github.com/mgr9525/go-mavlink1"
 )
 
-var mavchan = mavlink1.New()
-
 func main() {
+	var mavchan = mavlink1.New()
 	if mavchan.Start(getMsg) == nil {
 		println("mav start!")
 		testBytes := []byte{
@@ -51,11 +50,10 @@ func getMsg(msg *mavlink1.Mavlink1Msg) {
 	replyMsg.Compid = 1
 	replyMsg.Msgid = mavlink1.SET_MODE //test
 	replyMsg.Payload.Write([]byte{0x11, 0x22})
-	replyBytes := mavchan.GetMsgBytes(replyMsg).Bytes()
+	replyBytes := mavlink1.GetMsgBytes(replyMsg).Bytes()
 	fmt.Print("replyBytes:")
 	for _, v := range replyBytes {
 		fmt.Printf("%x, ", v)
 	}
 }
-
 ```
