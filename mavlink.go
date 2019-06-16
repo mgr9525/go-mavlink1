@@ -103,7 +103,7 @@ func (e *Mavlink1) run() {
 	sumth := (int(int(crc1)<<8) & 0xffff) | (int(crc2) & 0xff)
 	summe := (int(int(c1)<<8) & 0xffff) | (int(c2) & 0xff)
 	if sumth != summe {
-		fmt.Printf("checksum error,th:%d,me:%d!\n", sumth, summe)
+		fmt.Printf("checksum error,msgid:%d,th:%d,me:%d!\n", msgid, sumth, summe)
 		return
 	}
 
@@ -136,7 +136,9 @@ func (e *Mavlink1) NewMsg(sysid, compid, msgid int, data []byte) *Mavlink1Msg {
 	msg.Compid = byte(compid)
 	msg.Msgid = byte(msgid)
 	msg.Length = byte(len(data))
-	msg.Payload.Write(data)
+	if data != nil {
+		msg.Payload.Write(data)
+	}
 	return msg
 }
 
