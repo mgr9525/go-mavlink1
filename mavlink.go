@@ -13,6 +13,7 @@ import (
 type GetMsgFun func(msg *Mavlink1Msg)
 
 type Mavlink1 struct {
+	seq    byte
 	sysid  byte
 	compid byte
 
@@ -33,6 +34,7 @@ type Mavlink1Msg struct {
 
 func New() *Mavlink1 {
 	e := new(Mavlink1)
+	e.seq = 0
 	e.recvBuf = util.NewCircleByteBuffer(1024 * 5)
 	return e
 }
@@ -117,6 +119,25 @@ func (e *Mavlink1) run() {
 
 func (e *Mavlink1) Puts(bts []byte) (int, error) {
 	return e.recvBuf.Write(bts)
+}
+func (e *Mavlink1) NextSeq() byte {
+	ret := e.seq
+	if e.seq >= 255 {
+		e.seq = 0
+	} else {
+		e.seq += 1
+	}
+	return ret
+}
+func (e *Mavlink1) NewMsg(sysid, compid, msgid int, data []byte) *Mavlink1Msg {
+	msg := new(Mavlink1Msg)
+	msg.Seq = e.NextSeq()
+	msg.Sysid = byte(sysid)
+	msg.Compid = byte(compid)
+	msg.Msgid = byte(msgid)
+	msg.Length = byte(len(data))
+	msg.Payload.Write(data)
+	return msg
 }
 
 func GetMsgBytes(msg *Mavlink1Msg) *bytes.Buffer {
