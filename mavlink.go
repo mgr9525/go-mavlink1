@@ -60,7 +60,7 @@ func (e *Mavlink1) Stop() {
 }
 
 func (e *Mavlink1) run() {
-	//defer util.Recovers("run")
+	defer util.Recovers("run")
 
 	lens := e.recvBuf.GetLen()
 	for i := 0; i < lens; i++ {
