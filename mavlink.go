@@ -21,7 +21,7 @@ type Mavlink1 struct {
 	recvBuf *util.CircleByteBuffer
 }
 type Mavlink1Msg struct {
-	Length int
+	Length byte
 	Seq    byte
 	Sysid  byte
 	Compid byte
@@ -43,7 +43,7 @@ func (e *Mavlink1) Start(getfun GetMsgFun) error {
 	e.isRun = true
 	e.getFun = getfun
 	go func() {
-		for e.isRun {
+		for e.isRun && e.getFun != nil {
 			e.run()
 		}
 	}()
@@ -52,10 +52,11 @@ func (e *Mavlink1) Start(getfun GetMsgFun) error {
 
 func (e *Mavlink1) Stop() {
 	e.isRun = false
+	e.getFun = nil
 }
 
 func (e *Mavlink1) run() {
-	defer util.Recovers("run")
+	//defer util.Recovers("run")
 
 	lens := e.recvBuf.GetLen()
 	for i := 0; i < lens; i++ {
@@ -69,12 +70,15 @@ func (e *Mavlink1) run() {
 	if e.recvBuf.GetLen() < 6 {
 		return
 	}
-	ln := int(e.recvBuf.Geti(1) & 0xff)
+
+	ln := e.recvBuf.Geti(1)
 	seq := e.recvBuf.Geti(2)
 	sysid := e.recvBuf.Geti(3)
 	compid := e.recvBuf.Geti(4)
 	msgid := e.recvBuf.Geti(5)
-	if e.recvBuf.GetLen() < ln+8 {
+
+	length := int(ln & 0xff)
+	if e.recvBuf.GetLen() < length+8 {
 		return
 	}
 
@@ -84,7 +88,7 @@ func (e *Mavlink1) run() {
 	//------head end
 
 	//------body
-	btbd := make([]byte, ln)
+	btbd := make([]byte, length)
 	e.recvBuf.Read(btbd)
 	//------body end
 
@@ -115,9 +119,7 @@ func (e *Mavlink1) Puts(bts []byte) (int, error) {
 
 func (e *Mavlink1) GetMsgBytes(msg *Mavlink1Msg) *bytes.Buffer {
 	buf := new(bytes.Buffer)
-	buf.WriteByte(0xfe)
-	lns := util.Short2Bytes(msg.Length)
-	bthd := []byte{lns[0], lns[1], msg.Seq, msg.Sysid, msg.Compid, msg.Msgid}
+	bthd := []byte{0xfe, msg.Length, msg.Seq, msg.Sysid, msg.Compid, msg.Msgid}
 	btbd := msg.Payload.Bytes()
 	c1, c2 := GetChecksumCRC(&bthd, &btbd)
 	buf.Write(bthd)
