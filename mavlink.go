@@ -112,7 +112,7 @@ func (e *Mavlink1) run() {
 	msg.Compid = compid
 	msg.Msgid = msgid
 	msg.Payload.Write(btbd)
-	e.getFun(msg)
+	go e.getFun(msg)
 }
 
 func (e *Mavlink1) Puts(bts []byte) (int, error) {
