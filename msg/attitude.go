@@ -16,7 +16,8 @@ type Attitude struct {
 
 func Byte2Attitude(bts *[]byte) *Attitude {
 	sct := *(**Attitude)(unsafe.Pointer(bts))
-	return sct
+	ret := *sct
+	return &ret
 }
 func Attitude2Byte(sct *Attitude) *[]byte {
 	Len := unsafe.Sizeof(*sct)

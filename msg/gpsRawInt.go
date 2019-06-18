@@ -24,7 +24,8 @@ type GpsRawInt struct {
 
 func Byte2GpsRawInt(bts *[]byte) *GpsRawInt {
 	sct := *(**GpsRawInt)(unsafe.Pointer(bts))
-	return sct
+	ret := *sct
+	return &ret
 }
 func GpsRawInt2Byte(sct *GpsRawInt) *[]byte {
 	Len := unsafe.Sizeof(*sct)

@@ -12,7 +12,8 @@ type SetMode struct {
 
 func Byte2SetMode(bts *[]byte) *SetMode {
 	sct := *(**SetMode)(unsafe.Pointer(bts))
-	return sct
+	ret := *sct
+	return &ret
 }
 func SetMode2Byte(sct *SetMode) *[]byte {
 	Len := unsafe.Sizeof(*sct)

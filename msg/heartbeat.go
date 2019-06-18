@@ -15,7 +15,8 @@ type Heartbeat struct {
 
 func Byte2Heartbeat(bts *[]byte) *Heartbeat {
 	sct := *(**Heartbeat)(unsafe.Pointer(bts))
-	return sct
+	ret := *sct
+	return &ret
 }
 func Heartbeat2Byte(sct *Heartbeat) *[]byte {
 	Len := unsafe.Sizeof(*sct)

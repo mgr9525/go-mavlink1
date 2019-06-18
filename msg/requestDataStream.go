@@ -14,7 +14,8 @@ type RequestDataStream struct {
 
 func Byte2RequestDataStream(bts *[]byte) *RequestDataStream {
 	sct := *(**RequestDataStream)(unsafe.Pointer(bts))
-	return sct
+	ret := *sct
+	return &ret
 }
 func RequestDataStream2Byte(sct *RequestDataStream) *[]byte {
 	Len := unsafe.Sizeof(*sct)

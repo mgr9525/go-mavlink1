@@ -5,7 +5,9 @@ import "unsafe"
 const MSG_ID_COMMAND_LONG = 76
 
 const (
+	MAV_CMD_NAV_TAKEOFF               = 22
 	MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN = 246
+	MAV_CMD_COMPONENT_ARM_DISARM      = 400
 )
 
 type CommandLong struct {
@@ -24,7 +26,8 @@ type CommandLong struct {
 
 func Byte2CommandLong(bts *[]byte) *CommandLong {
 	sct := *(**CommandLong)(unsafe.Pointer(bts))
-	return sct
+	ret := *sct
+	return &ret
 }
 func CommandLong2Byte(sct *CommandLong) *[]byte {
 	Len := unsafe.Sizeof(*sct)

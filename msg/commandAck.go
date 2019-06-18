@@ -11,7 +11,8 @@ type CommandAck struct {
 
 func Byte2CommandAck(bts *[]byte) *CommandAck {
 	sct := *(**CommandAck)(unsafe.Pointer(bts))
-	return sct
+	ret := *sct
+	return &ret
 }
 func CommandAck2Byte(sct *CommandAck) *[]byte {
 	Len := unsafe.Sizeof(*sct)
