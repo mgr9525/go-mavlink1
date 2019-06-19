@@ -4,6 +4,15 @@ import "unsafe"
 
 const MSG_ID_SET_POSITION_TARGET_GLOBAL_INT = 86
 
+var (
+	MAVLINK_SET_POS_TYPE_MASK_POS_IGNORE      = ((1 << 0) | (1 << 1) | (1 << 2))
+	MAVLINK_SET_POS_TYPE_MASK_VEL_IGNORE      = ((1 << 3) | (1 << 4) | (1 << 5))
+	MAVLINK_SET_POS_TYPE_MASK_ACC_IGNORE      = ((1 << 6) | (1 << 7) | (1 << 8))
+	MAVLINK_SET_POS_TYPE_MASK_FORCE           = (1 << 9)
+	MAVLINK_SET_POS_TYPE_MASK_YAW_IGNORE      = (1 << 10)
+	MAVLINK_SET_POS_TYPE_MASK_YAW_RATE_IGNORE = (1 << 11)
+)
+
 type SetPosTargetGlobalInt struct {
 	TimeBootMs      uint32  /*< [ms] Timestamp in milliseconds since system boot. The rationale for the timestamp in the setpoint is to allow the system to compensate for the transport delay of the setpoint. This allows the system to compensate processing latency.*/
 	LatInt          uint32  /*< [degE7] X Position in WGS84 frame in 1e7 * degrees*/

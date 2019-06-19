@@ -8,6 +8,7 @@ const (
 	MAV_CMD_NAV_TAKEOFF               = 22
 	MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN = 246
 	MAV_CMD_COMPONENT_ARM_DISARM      = 400
+	MAV_CMD_DO_PAUSE_CONTINUE         = 193
 )
 
 type CommandLong struct {
