@@ -11,6 +11,9 @@ var (
 	MAVLINK_SET_POS_TYPE_MASK_FORCE           = (1 << 9)
 	MAVLINK_SET_POS_TYPE_MASK_YAW_IGNORE      = (1 << 10)
 	MAVLINK_SET_POS_TYPE_MASK_YAW_RATE_IGNORE = (1 << 11)
+
+	MAV_FRAME_GLOBAL_RELATIVE_ALT = 3
+	MAV_FRAME_GLOBAL_INT          = 5
 )
 
 type SetPosTargetGlobalInt struct {
