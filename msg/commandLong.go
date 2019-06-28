@@ -10,6 +10,7 @@ const (
 	MAV_CMD_COMPONENT_ARM_DISARM      = 400
 	MAV_CMD_DO_SET_SERVO              = 183
 	MAV_CMD_DO_PAUSE_CONTINUE         = 193
+	MAV_CMD_CONDITION_YAW             = 115
 )
 
 type CommandLong struct {
