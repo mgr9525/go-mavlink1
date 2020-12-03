@@ -57,3 +57,13 @@ func getMsg(msg *mavlink1.Mavlink1Msg) {
 	}
 }
 ```
+
+## Output
+```
+mav start!
+input any to exit!
+getMsg from:1-1, msgid:6f
+replyBytes: fe080001020b0100000001010000871f
+
+
+```

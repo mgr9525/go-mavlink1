@@ -5,9 +5,11 @@ import "C"
 import (
 	"bytes"
 	"errors"
-	"github.com/mgr9525/go-mavlink1/util"
 	"log"
 	"time"
+	"unsafe"
+
+	"github.com/mgr9525/go-mavlink1/util"
 )
 
 type GetMsgFun func(msg *Mavlink1Msg)
@@ -98,7 +100,7 @@ func (e *Mavlink1) run() {
 
 	crc1, _ := e.recvBuf.GetByte()
 	crc2, _ := e.recvBuf.GetByte()
-	c1, c2 := GetChecksumCRC(&bthd, &btbd)
+	c1, c2 := GetChecksumCRC(bthd, btbd)
 
 	sumth := (int(int(crc1)<<8) & 0xffff) | (int(crc2) & 0xff)
 	summe := (int(int(c1)<<8) & 0xffff) | (int(c2) & 0xff)
@@ -146,19 +148,18 @@ func GetMsgBytes(msg *Mavlink1Msg) *bytes.Buffer {
 	buf := new(bytes.Buffer)
 	bthd := []byte{0xfe, msg.Length, msg.Seq, msg.Sysid, msg.Compid, msg.Msgid}
 	btbd := *msg.Payload
-	c1, c2 := GetChecksumCRC(&bthd, &btbd)
+	c1, c2 := GetChecksumCRC(bthd, btbd)
 	buf.Write(bthd)
 	buf.Write(btbd)
 	buf.Write([]byte{c1, c2})
 	return buf
 }
 
-func GetChecksumCRC(bthd, btbd *[]byte) (byte, byte) {
-	bthds := *bthd
-	btbds := *btbd
-	checksum := C.crc_calculate(C.CBytes(bthds[1:]), 5)
-	C.crc_accumulate_buffer(&checksum, C.CBytes(btbds), C.int(len(btbds)))
-	C.crc_accumulate(C.uchar(MSG_CRC[bthds[5]]&0xff), &checksum)
+func GetChecksumCRC(bthd, btbd []byte) (byte, byte) {
+	bthds := bthd[1:]
+	checksum := C.crc_calculate(unsafe.Pointer(&bthds[0]), 5)
+	C.crc_accumulate_buffer(&checksum, unsafe.Pointer(&btbd[0]), C.int(len(btbd)))
+	C.crc_accumulate(C.uchar(MSG_CRC[bthd[5]]&0xff), &checksum)
 	c1 := byte(checksum & 0xff)
 	c2 := byte((checksum >> 8) & 0xff)
 	return c1, c2

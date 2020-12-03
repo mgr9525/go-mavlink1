@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/mgr9525/go-mavlink1"
 	"github.com/mgr9525/go-mavlink1/msg"
@@ -34,15 +35,11 @@ func main() {
 
 func getMsg(msg *mavlink1.Mavlink1Msg) {
 	fmt.Printf("getMsg from:%x-%x, msgid:%x\n", msg.Sysid, msg.Compid, msg.Msgid)
-
 	sct := new(messages.SetMode)
 	sct.TargetSystem = 1
 	sct.CustomMode = 1
 	sct.BaseMode = 1
 	replyMsg := mavchan.NewMsg(1, 2, messages.MSG_ID_SET_MODE, messages.SetMode2Byte(sct))
 	replyBytes := mavlink1.GetMsgBytes(replyMsg).Bytes()
-	fmt.Print("replyBytes:")
-	for _, v := range replyBytes {
-		fmt.Printf("%x, ", v)
-	}
+	fmt.Println("replyBytes:", hex.EncodeToString(replyBytes))
 }
