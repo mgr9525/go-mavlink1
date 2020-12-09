@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/mgr9525/go-mavlink1"
-	"github.com/mgr9525/go-mavlink1/msg"
+	"github.com/mgr9525/go-mavlink1/messages"
 	"github.com/mgr9525/go-mavlink1/util"
 	"time"
 	"unsafe"
@@ -44,7 +44,7 @@ func main() {
 		payload, err := util.Struct2Bytes(unsafe.Pointer(sct), unsafe.Sizeof(*sct))
 		if err == nil {
 			replyMsg := mavchan.NewMsg(1, 2, messages.MSG_ID_ATTITUDE, payload)
-			mavchan.Puts(mavlink1.GetMsgBytes(replyMsg).Bytes())
+			mavchan.Puts(replyMsg.GetBytes())
 		}
 	}
 
@@ -78,7 +78,6 @@ func getMsg(msg *mavlink1.Mavlink1Msg) {
 			return
 		}
 		replyMsg := mavchan.NewMsg(1, 2, messages.MSG_ID_SET_MODE, payload)
-		replyBytes := mavlink1.GetMsgBytes(replyMsg).Bytes()
-		println("replyBytes:", hex.EncodeToString(replyBytes))
+		println("replyBytes:", hex.EncodeToString(replyMsg.GetBytes()))
 	}
 }

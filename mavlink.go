@@ -156,12 +156,12 @@ func (e *Mavlink1) NewMsg(sysid, compid, msgid int, data []byte) *Mavlink1Msg {
 	return msg
 }
 
-func GetMsgBytes(msg *Mavlink1Msg) *bytes.Buffer {
-	buf := new(bytes.Buffer)
+func (msg *Mavlink1Msg) GetBytes() []byte {
+	buf := &bytes.Buffer{}
 	bthd := []byte{0xfe, msg.Length, msg.Seq, msg.Sysid, msg.Compid, msg.Msgid}
 	c1, c2 := util.GetChecksumCRC(bthd, msg.Payload)
 	buf.Write(bthd)
 	buf.Write(msg.Payload)
 	buf.Write([]byte{c1, c2})
-	return buf
+	return buf.Bytes()
 }
