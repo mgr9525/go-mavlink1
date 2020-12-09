@@ -13,9 +13,9 @@ mavchan := mavlink1.New()
 mavchan.Start(getMsg)
 mavchan.Puts(mavData)
 ```
-> getMsg: It's a function call when get message
+> getMsg（func）: It's a function call when get message
 
-> mavData: It's data stream of mavlink([]byte).v1,it could receive from serialport or tcp socket.
+> mavData([]byte): It's data stream of mavlink.v1,it could receive from serialport or tcp socket.
 
 ## More detail see folder test
 ### [test/main.go](test/main.go "more examples")
