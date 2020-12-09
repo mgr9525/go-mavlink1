@@ -1,13 +1,11 @@
 package mavlink1
 
-// #include "checksum.h"
-import "C"
 import (
 	"bytes"
+	"context"
 	"errors"
 	"log"
 	"time"
-	"unsafe"
 
 	"github.com/mgr9525/go-mavlink1/util"
 )
@@ -19,7 +17,8 @@ type Mavlink1 struct {
 	sysid  byte
 	compid byte
 
-	isRun bool
+	ctx  context.Context
+	cncl context.CancelFunc
 
 	getFun  GetMsgFun
 	recvBuf *util.CircleByteBuffer
@@ -31,7 +30,7 @@ type Mavlink1Msg struct {
 	Compid byte
 	Msgid  byte
 
-	Payload *[]byte
+	Payload []byte
 }
 
 func New() *Mavlink1 {
@@ -45,20 +44,31 @@ func (e *Mavlink1) Start(getfun GetMsgFun) error {
 	if getfun == nil {
 		return errors.New("getfun is nil")
 	}
-	e.isRun = true
 	e.getFun = getfun
+	e.ctx, e.cncl = context.WithCancel(context.Background())
 	go func() {
-		for e.isRun && e.getFun != nil {
-			e.run()
-			time.Sleep(time.Millisecond)
+		for {
+			select {
+			case <-e.ctx.Done():
+				e.cncl = nil
+				return
+			default:
+				e.run()
+				time.Sleep(time.Millisecond)
+			}
 		}
 	}()
 	return nil
 }
 
+func (e *Mavlink1) Stopd() bool {
+	return e.cncl == nil
+}
 func (e *Mavlink1) Stop() {
-	e.isRun = false
 	e.getFun = nil
+	if e.cncl != nil {
+		e.cncl()
+	}
 }
 
 func (e *Mavlink1) run() {
@@ -100,7 +110,7 @@ func (e *Mavlink1) run() {
 
 	crc1, _ := e.recvBuf.GetByte()
 	crc2, _ := e.recvBuf.GetByte()
-	c1, c2 := GetChecksumCRC(bthd, btbd)
+	c1, c2 := util.GetChecksumCRC(bthd, btbd)
 
 	sumth := (int(int(crc1)<<8) & 0xffff) | (int(crc2) & 0xff)
 	summe := (int(int(c1)<<8) & 0xffff) | (int(c2) & 0xff)
@@ -115,8 +125,10 @@ func (e *Mavlink1) run() {
 	msg.Sysid = sysid
 	msg.Compid = compid
 	msg.Msgid = msgid
-	msg.Payload = &btbd
-	go e.getFun(msg)
+	msg.Payload = btbd
+	if e.getFun != nil {
+		go e.getFun(msg)
+	}
 }
 
 func (e *Mavlink1) Puts(bts []byte) (int, error) {
@@ -131,13 +143,13 @@ func (e *Mavlink1) NextSeq() byte {
 	}
 	return ret
 }
-func (e *Mavlink1) NewMsg(sysid, compid, msgid int, data *[]byte) *Mavlink1Msg {
+func (e *Mavlink1) NewMsg(sysid, compid, msgid int, data []byte) *Mavlink1Msg {
 	msg := new(Mavlink1Msg)
 	msg.Seq = e.NextSeq()
 	msg.Sysid = byte(sysid)
 	msg.Compid = byte(compid)
 	msg.Msgid = byte(msgid)
-	msg.Length = byte(len(*data))
+	msg.Length = byte(len(data))
 	if data != nil {
 		msg.Payload = data
 	}
@@ -147,20 +159,9 @@ func (e *Mavlink1) NewMsg(sysid, compid, msgid int, data *[]byte) *Mavlink1Msg {
 func GetMsgBytes(msg *Mavlink1Msg) *bytes.Buffer {
 	buf := new(bytes.Buffer)
 	bthd := []byte{0xfe, msg.Length, msg.Seq, msg.Sysid, msg.Compid, msg.Msgid}
-	btbd := *msg.Payload
-	c1, c2 := GetChecksumCRC(bthd, btbd)
+	c1, c2 := util.GetChecksumCRC(bthd, msg.Payload)
 	buf.Write(bthd)
-	buf.Write(btbd)
+	buf.Write(msg.Payload)
 	buf.Write([]byte{c1, c2})
 	return buf
-}
-
-func GetChecksumCRC(bthd, btbd []byte) (byte, byte) {
-	bthds := bthd[1:]
-	checksum := C.crc_calculate(unsafe.Pointer(&bthds[0]), 5)
-	C.crc_accumulate_buffer(&checksum, unsafe.Pointer(&btbd[0]), C.int(len(btbd)))
-	C.crc_accumulate(C.uchar(MSG_CRC[bthd[5]]&0xff), &checksum)
-	c1 := byte(checksum & 0xff)
-	c2 := byte((checksum >> 8) & 0xff)
-	return c1, c2
 }

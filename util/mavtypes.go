@@ -1,4 +1,4 @@
-package mavlink1
+package util
 
 var MSG_CRC = MSG_CRC_APM // MSG_CRC_COMMON
 

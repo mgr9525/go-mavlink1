@@ -1,69 +1,42 @@
 # Golang Mavlink1.0
 
+This is a very stable mavlink message parsing library.It doesn't care how your data is transmitted. 
+
 ## How to use
 ```
 go get github.com/mgr9525/go-mavlink1
 ```
 
+## Begin
+```
+mavchan := mavlink1.New()
+mavchan.Start(getMsg)
+mavchan.Puts(mavData)
+```
+> getMsg: It's a function call when get message
+
+> mavData: It's data stream of mavlink([]byte).v1,it could receive from serialport or tcp socket.
+
 ## More detail see folder test
+### [test/main.go](test/main.go "more examples")
 
-```
-package main
-
-import (
-	"fmt"
-	"github.com/mgr9525/go-mavlink1"
-)
-
-func main() {
-	var mavchan = mavlink1.New()
-	if mavchan.Start(getMsg) == nil {
-		println("mav start!")
-		testBytes := []byte{
-			0xfe, // stx
-			0x10, //Length of payload
-			0x35, //Sequence of packet
-			0x01, //sysid    ID of message sender system/aircraft
-			0x01, //compid  ID of the message sender component
-			0x6f, //msgid   ID of message in payload
-			0x00, //payload
-			0x00, //payload
-			0x00, //payload ...
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x19, 0x7b, 0x5f, 0x1f, 0xba, 0x29, 0x0, 0x00,
-			0x35, 0x4f, //crc
-		}
-		mavchan.Puts(testBytes)
-	}
-
-	fmt.Println("input any to exit!")
-	fmt.Scanf("%s")
-	mavchan.Stop()
-}
-
-func getMsg(msg *mavlink1.Mavlink1Msg) {
-	fmt.Printf("getMsg from:%x-%x, msgid:%x\n", msg.Sysid, msg.Compid, msg.Msgid)
-
-	replyMsg := new(mavlink1.Mavlink1Msg)
-	replyMsg.Length = 2
-	replyMsg.Seq = 1
-	replyMsg.Sysid = 2
-	replyMsg.Compid = 1
-	replyMsg.Msgid = mavlink1.SET_MODE //test
-	replyMsg.Payload=&[]byte{0x11, 0x22}
-	replyBytes := mavlink1.GetMsgBytes(replyMsg).Bytes()
-	fmt.Print("replyBytes:")
-	for _, v := range replyBytes {
-		fmt.Printf("%x, ", v)
-	}
-}
-```
 
 ## Output
 ```
 mav start!
-input any to exit!
 getMsg from:1-1, msgid:6f
-replyBytes: fe080001020b0100000001010000871f
-
+replyBytes: fe060001020b080000000101f1da
+input any to exit!
+getMsg from:1-2, msgid:1e
+get ATTITUDE: 05000000000048413333834166669a4166a6a043333367429a99ad41
+roll:12.500000,pitch:16.400000,yaw:19.299999
+rollspeed:321.299988,pitchspeed:57.799999,yawspeed:21.700001
 
 ```
+
+
+## How to add message
+### More detail see folder "messages"
+> [Set fly system mode message!!!](messages/setmode.go "more examples")
+
+> Notice the sizeof of the structure,it control with byte and []byte,con't use int32,float32...,see [Struct sizeof](https://stackoverflow.com/questions/34219232/struct-has-different-size-if-the-field-order-is-different)
